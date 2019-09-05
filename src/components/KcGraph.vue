@@ -7,7 +7,9 @@
 <script lang="ts">
     import * as PIXI from 'pixi.js'
     import {Tx} from "@/ogapi";
-    import {Component, Prop, Vue, Watch} from 'vue-property-decorator';
+    import {Component, Prop, Watch} from 'vue-property-decorator';
+    import Vue from 'vue';
+
 
     @Component
     export default class KcGraph extends Vue{
@@ -21,18 +23,53 @@
         @Prop()
         txs: Tx[] = [];
 
+        // public $refs!: {
+        //     renderArea: HTMLElement
+        // };
+
+
         // @Watch('myx')
         // onMyXChanged(newVal: string, oldVal: string){
         //     this.repaint();
         // }
 
-        app: PIXI.Application;
-        canvasElement: HTMLElement;
-        private readonly gfx: PIXI.Graphics;
+        app!: PIXI.Application;
+        canvasElement!: HTMLElement;
+        gfx!: PIXI.Graphics;
 
 
         public constructor() {
             super();
+            // this.app.stage.mousemove = this.lll;
+            // this.app.stage.touchmove = this.lll;
+        }
+
+        repaint() {
+            console.log("repaint");
+            let w = this.app.view.width;
+            let h = this.app.view.height;
+
+            // while (this.app.stage.children.length > 0) {
+            //     this.app.stage.removeChildAt(0);
+            // }
+            console.log(w,h);
+
+            // set the line style to have a width of 5 and set the color to red
+            this.gfx.lineStyle(1, 0xFF0000);
+            this.gfx.beginFill(0x004F00);
+
+            // draw a rectangle
+            // this.gfx.drawRect(200, 500, 500,500);
+            this.gfx.drawCircle(100,100,30);
+
+            // draw all txs
+            for (let tx of this.txs) {
+                console.log(tx.bet);
+            }
+            // this.app.stage.addChild(this.gfx);
+        }
+
+        init(){
             // Determine the width and height of the renderer wrapper element.
             this.canvasElement = this.$refs.renderArea as HTMLElement;
             const w = this.canvasElement.offsetWidth;
@@ -50,43 +87,53 @@
             window.addEventListener("resize", () => this.onWindowResized());
 
             this.gfx = new PIXI.Graphics();
+            this.gfx.interactive = true;
+            this.gfx.buttonMode = true;
+            this.gfx
+                .on('pointerdown', this.onDragStart, this.gfx)
+                .on('pointerup', this.onDragEnd, this.gfx)
+                .on('pointerupoutside', this.onDragEnd, this.gfx)
+                .on('pointermove', this.onDragMove, this.gfx);
+
             this.app.stage.addChild(this.gfx);
             this.app.stage.interactive = true;
             this.app.renderer.plugins.interaction.moveWhenInside = true;
-            // this.app.stage.mousemove = this.lll;
-            // this.app.stage.touchmove = this.lll;
         }
 
-        repaint() {
-            let w = this.app.view.width;
-            let h = this.app.view.height;
-
-            while (this.app.stage.children.length > 0) {
-                this.app.stage.removeChildAt(0);
-            }
-
-            // set the line style to have a width of 5 and set the color to red
-            this.gfx.lineStyle(1, 0xFF0000);
-            this.gfx.beginFill(0x00FF00);
-
-            // draw a rectangle
-            this.gfx.drawRect(0, 0, w - 20, h - 20);
-
-            // draw all txs
-            for (let tx of this.txs) {
-                console.log(tx.bet);
-
-            }
+        onDragStart(event: PIXI.interaction.InteractionEventTypes,context: PIXI.Graphics) {
+            // store a reference to the data
+            // the reason for this is because of multitouch
+            // we want to track the movement of this particular touch
+            // context.data = event.data;
+            context.alpha = 0.5;
+            // context.dragging = true;
         }
+
+        onDragEnd(event: PIXI.interaction.InteractionEventTypes,context: PIXI.Graphics) {
+            context.alpha = 1;
+            // this.dragging = false;
+            // set the interaction data to null
+            // this.data = null;
+        }
+
+        onDragMove(event: PIXI.interaction.InteractionEventTypes,context: PIXI.Graphics) {
+            // if (this.dragging) {
+                const newPosition = this.data.getLocalPosition(event..parent);
+            context.x = newPosition.x;
+            context.y = newPosition.y;
+            // }
+        }
+
+
 
         mounted() {
+            this.init();
             this.repaint();
         }
 
         private onWindowResized() {
             let canvasWidth : number = this.canvasElement.offsetWidth;
             let canvasHeight : number = this.canvasElement.offsetHeight;
-
             this.app.renderer.resize(canvasWidth, canvasHeight);
         }
     }
