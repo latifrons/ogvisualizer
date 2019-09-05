@@ -2,39 +2,51 @@
     <div id="app" style="margin-left: 10px; margin-top: 10px">
         <!--        <kc-graph @xx="setX" id="toplayer" style="width: 300px; height: 200px;" :myx="this.x+30" :interactive="true"></kc-graph>-->
         <!--        <div style="height: 20px"></div>-->
-        <kc-graph @xx="setX" style="width: 1800px; height: 950px;" :myx="this.x" :interactive="true" :txs="alldata">
+        <kc-graph style="width: 1800px; height: 950px;">
             <!--            <kc-curve v-for="n in 1" :x="3*n" :y="3*n"></kc-curve>-->
         </kc-graph>
     </div>
 </template>
 
-<script>
+<script lang="ts">
+
     import KcGraph from "./components/KcGraph.vue";
     import {getSeqData, Tx} from "@/ogapi";
+    import Component from "vue-class-component"
+    import {Prop, Vue} from "vue-property-decorator"
 
-    export default {
-        data() {
-            return {
-                x: 0,
-                alldata: Tx[]  = [],
-            }
-        },
-        name: "app",
-        components: {
-            KcGraph,
-            // KcCurve,
-        },
-        methods: {
-            setX(x) {
-                this.x = x;
-            }
-        },
+    @Component
+    export default class App extends Vue{
+        // @Prop()
+        // propA: number = 1
+        //
+        // @Prop({ default: 'default value' })
+        // propB: string
+        //
+        // @Prop([String, Boolean])
+        // propC: string | boolean
+        //
+        // @Prop({ type: null })
+        // propD: any
+
+        @Prop()
+        x: number = 0;
+
+        @Prop()
+        alldata: Tx[] = [];
+
         mounted() {
             this.alldata = getSeqData(1);
         }
-    };
 
+        get computedMsg(){
+            return 'computed' + this.x
+        }
 
+        setX(x:number){
+            this.x =x ;
+        }
+    }
 </script>
 
 <style>

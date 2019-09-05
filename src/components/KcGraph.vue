@@ -1,100 +1,93 @@
 <template>
-    <div>
-        <canvas ref="renderCanvas"></canvas>
+    <div ref="renderArea">
         <slot></slot>
     </div>
 </template>
 
 <script lang="ts">
-    import Vue from 'vue'
     import * as PIXI from 'pixi.js'
     import {Tx} from "@/ogapi";
-    import {Component, Vue, Prop, Watch} from 'vue-property-decorator';
-
+    import {Component, Prop, Vue, Watch} from 'vue-property-decorator';
 
     @Component
     export default class KcGraph extends Vue{
         // These need to be contained in an object because providers are not reactive.
-        PIXIWrapper!: {
+        // PIXIWrapper : {
             // Expose PIXI and the created app to all descendants.
-            PIXI: { Graphics: new () => void; };
-            PIXIApp: null;
-        };
+        // };
         // Expose the event bus to all descendants so they can listen for the app-ready event.
         // EventBus!: new Vue();
 
-        @Prop({ type: Array, required: true })
-        txs!: Tx[] | undefined;
+        @Prop()
+        txs: Tx[] = [];
 
-        @Watch('myx')
-        onMyXChanged(newVal: string, oldVal: string){
-            this.repaint();
+        // @Watch('myx')
+        // onMyXChanged(newVal: string, oldVal: string){
+        //     this.repaint();
+        // }
 
+        app: PIXI.Application;
+        canvasElement: HTMLElement;
+        private readonly gfx: PIXI.Graphics;
+
+
+        public constructor() {
+            super();
+            // Determine the width and height of the renderer wrapper element.
+            this.canvasElement = this.$refs.renderArea as HTMLElement;
+            const w = this.canvasElement.offsetWidth;
+            const h = this.canvasElement.offsetHeight;
+
+            let pixiOptions : PIXI.ApplicationOptions = { transparent: false, backgroundColor: 0x1099bb, width: w, height: h };
+            this.app = new PIXI.Application(pixiOptions);
+            this.canvasElement.appendChild(this.app.view);
+
+            //fix scrolling when touching the canvas on mobile
+            this.app.renderer.plugins["interaction"].autoPreventDefault = false;
+            this.app.renderer.view.style.setProperty('touch-action','auto');
+
+            //register the window resize event to resize the pixi renderer
+            window.addEventListener("resize", () => this.onWindowResized());
+
+            this.gfx = new PIXI.Graphics();
+            this.app.stage.addChild(this.gfx);
+            this.app.stage.interactive = true;
+            this.app.renderer.plugins.interaction.moveWhenInside = true;
+            // this.app.stage.mousemove = this.lll;
+            // this.app.stage.touchmove = this.lll;
         }
 
-        // Allows any child component to `inject: ['provider']` and have access to it.
-        // provide() {
-        //     return {
-        //         PIXIWrapper: this.PIXIWrapper,
-        //         EventBus: this.EventBus
-        //     }
-        // },
-
-
         repaint() {
-            let w = this.PIXIWrapper.PIXIApp.view.width;
-            let h = this.PIXIWrapper.PIXIApp.view.height;
+            let w = this.app.view.width;
+            let h = this.app.view.height;
 
-            while (this.PIXIWrapper.PIXIApp.stage.children.length > 0) {
-                this.PIXIWrapper.PIXIApp.stage.removeChildAt(0);
+            while (this.app.stage.children.length > 0) {
+                this.app.stage.removeChildAt(0);
             }
 
-            var graphics = new this.PIXIWrapper.PIXI.Graphics();
-
             // set the line style to have a width of 5 and set the color to red
-            graphics.lineStyle(1, 0xFF0000);
-            graphics.beginFill(0x00FF00);
+            this.gfx.lineStyle(1, 0xFF0000);
+            this.gfx.beginFill(0x00FF00);
 
             // draw a rectangle
-            graphics.drawRect(0, 0, w - 20, h - 20);
-            this.PIXIWrapper.PIXIApp.stage.addChild(graphics);
+            this.gfx.drawRect(0, 0, w - 20, h - 20);
 
             // draw all txs
             for (let tx of this.txs) {
-                console.log(tx.)
+                console.log(tx.bet);
+
             }
-
-
         }
 
-
         mounted() {
-
-            // Determine the width and height of the renderer wrapper element.
-            const renderCanvas = this.$refs.renderCanvas;
-            const w = renderCanvas.offsetWidth - this.myx;
-            const h = renderCanvas.offsetHeight;
-
-            // Create a new PIXI app.
-            this.PIXIWrapper.PIXIApp = new PIXI.Application(w, h, {
-                view: renderCanvas,
-                backgroundColor: 0x1099bb
-            });
-
-            this.EventBus.$emit('ready');
-            this.PIXIWrapper.PIXIApp.stage.interactive = this.interactive;
-            this.PIXIWrapper.PIXIApp.renderer.plugins.interaction.moveWhenInside = true;
-            this.PIXIWrapper.PIXIApp.stage.mousemove = this.lll;
-            this.PIXIWrapper.PIXIApp.stage.touchmove = this.lll;
-
             this.repaint();
-        },
-        methods: {
-            lll(event) {
-                var p = event.data.global;
-                this.$emit("xx", p.x);
-            },
+        }
 
+        private onWindowResized() {
+            let canvasWidth : number = this.canvasElement.offsetWidth;
+            let canvasHeight : number = this.canvasElement.offsetHeight;
+
+            this.app.renderer.resize(canvasWidth, canvasHeight);
         }
     }
 </script>
