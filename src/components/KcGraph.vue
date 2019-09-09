@@ -6,71 +6,122 @@
 
 <script lang="ts">
     import * as PIXI from "pixi.js";
-    import {Tx} from "@/ogapi";
+    import {getSeqData, Tx} from "@/ogapi";
     import {Component, Prop, Watch} from "vue-property-decorator";
     import Vue from "vue";
     import Graphics = PIXI.Graphics;
+    import randomcolor from "randomcolor"
 
+    class Team {
+        public name: string;
+        public color: number;
+
+        constructor(name: string, color: number) {
+            this.name = name;
+            this.color = color;
+        }
+    }
+
+    class TxG extends Graphics {
+        public tx: Tx;
+        public team: Team;
+        public dragging: boolean = false;
+        public txChildren: string[] = [];
+
+        constructor(tx: Tx, team: Team) {
+            super();
+            this.tx = tx;
+            this.team = team;
+        }
+    }
+
+    class GraphConfiguration {
+        public w: number;
+        public h: number;
+        public unitSize: number;
+
+        constructor(w: number, h: number) {
+            this.w = w;
+            this.h = h;
+            this.unitSize = h / 20;
+        }
+    }
 
     @Component
     export default class KcGraph extends Vue {
-        // These need to be contained in an object because providers are not reactive.
-        // PIXIWrapper : {
-        // Expose PIXI and the created app to all descendants.
-        // };
-        // Expose the event bus to all descendants so they can listen for the app-ready event.
-        // EventBus!: new Vue();
 
         @Prop()
         txs: Tx[] = [];
 
-        // public $refs!: {
-        //     renderArea: HTMLElement
-        // };
-
-
-        // @Watch('myx')
-        // onMyXChanged(newVal: string, oldVal: string){
-        //     this.repaint();
-        // }
-
         app!: PIXI.Application;
         canvasElement!: HTMLElement;
-        gfx!: PIXI.Graphics;
 
-        dragging: boolean = false;
+        hashTx: Record<string, TxG> = {};
+        gc: GraphConfiguration;
+        nameTeams: Record<string, Team> = {};
 
+        infoAreaText: PIXI.Text = new PIXI.Text("", new PIXI.TextStyle({
+            fontFamily: 'Arial',
+            fontSize: 20,
+            // fontStyle: 'italic',
+            fontWeight: 'bold',
+            fill: ['#ffffff', '#00ff99'], // gradient
+            stroke: '#4a1850',
+            strokeThickness: 5,
+            dropShadow: true,
+            dropShadowColor: '#000000',
+            dropShadowBlur: 4,
+            dropShadowAngle: Math.PI / 6,
+            dropShadowDistance: 2,
+            wordWrap: true,
+            wordWrapWidth: 440,
+        }));
 
         public constructor() {
             super();
-            // this.app.stage.mousemove = this.lll;
-            // this.app.stage.touchmove = this.lll;
+            this.gc = new GraphConfiguration(0, 0);
         }
 
         repaint() {
             console.log("repaint");
-            let w = this.app.view.width;
-            let h = this.app.view.height;
+            this.gc.w = this.app.view.width;
+            this.gc.h = this.app.view.height;
 
+            // draw background
 
             // while (this.app.stage.children.length > 0) {
             //     this.app.stage.removeChildAt(0);
             // }
-            console.log(w, h);
-
-            // set the line style to have a width of 5 and set the color to red
-            this.gfx.lineStyle(1, 0xFF0000);
-            this.gfx.beginFill(0x004F00);
-
-            // draw a rectangle
-            // this.gfx.drawRect(200, 500, 500,500);
-            this.gfx.drawCircle(0, 0, 30);
 
             // draw all txs
             for (let tx of this.txs) {
                 console.log(tx.bet);
+                this.handleTx(tx);
             }
             // this.app.stage.addChild(this.gfx);
+        }
+
+        repaintTx(gfx: TxG) {
+            gfx.clear();
+            gfx.lineStyle(2, 0x003300);
+            gfx.beginFill(gfx.team.color);
+            console.log(gfx.team.color);
+            gfx.drawCircle(0, 0, gfx.tx.bet / 10);
+
+            // locate other and connect them
+            for (let parent of gfx.tx.parents){
+                let parentGfx = this.hashTx[parent];
+                if (parentGfx === undefined){
+                    // TODO: makeup one
+                    continue;
+                }
+                gfx.lineStyle(3, 0xFFFF00);
+                gfx.moveTo(0,0);
+                gfx.lineTo(parentGfx.x - gfx.x, parentGfx.y - gfx.y);
+            }
+            for (let child of gfx.txChildren){
+                this.repaintTx(this.hashTx[child]);
+            }
         }
 
         init() {
@@ -83,7 +134,8 @@
                 transparent: false,
                 backgroundColor: 0x1099bb,
                 width: w,
-                height: h
+                height: h,
+                antialias: true,
             };
             this.app = new PIXI.Application(pixiOptions);
             this.canvasElement.appendChild(this.app.view);
@@ -95,39 +147,46 @@
             //register the window resize event to resize the pixi renderer
             window.addEventListener("resize", () => this.onWindowResized());
 
-            this.gfx = new PIXI.Graphics();
-            this.gfx.interactive = true;
-            this.gfx.buttonMode = true;
-            this.gfx
-                .on("pointerdown", this.onDragStart)
-                .on("pointerup", this.onDragEnd)
-                .on("pointerupoutside", this.onDragEnd)
-                .on("pointermove", this.onDragMove);
-            this.gfx.x = this.gfx.y = 100;
+            // add info area
+            this.infoAreaText.text = 'Hover to see the detailed info';
 
-            this.app.stage.addChild(this.gfx);
+            this.app.stage.addChild(this.infoAreaText);
             this.app.stage.interactive = true;
             // this.app.renderer.plugins.interaction.moveWhenInside = true;
+        }
+
+        handleTx(tx: Tx) {
+            if (this.hashTx[tx.id] !== undefined){
+                // already there. duplicate tx.
+                return;
+            }
+            let team = this.judgeTeam(tx);
+            let gfx = this.setupTxG(tx,team);
+            this.repaintTx(gfx);
+            this.app.stage.addChild(gfx);
         }
 
         onDragStart(event: PIXI.interaction.InteractionEvent) {
             // store a reference to the data
             // the reason for this is because of multitouch
             // we want to track the movement of this particular touch
-            let currentTarget: Graphics = event.currentTarget as Graphics;
+
+            let currentTarget: TxG = event.currentTarget as TxG;
             let data = event.data;
             let type = event.type;
-            this.dragging = true;
+            currentTarget.dragging = true;
 
             let p = event.data.getLocalPosition(event.currentTarget.parent);
 
             // console.log(type, "moving to ", p);
             currentTarget.x = p.x;
             currentTarget.y = p.y;
+            this.repaintTx(currentTarget);
             // context.data = event.data;
             // event.data.
             // context.alpha = 0.5;
             // context.dragging = true;
+
         }
 
         onDragEnd(event: PIXI.interaction.InteractionEvent) {
@@ -135,10 +194,11 @@
             // this.dragging = false;
             // set the interaction data to null
             // this.data = null;
-            let currentTarget: Graphics = event.currentTarget as Graphics;
+            let currentTarget: TxG = event.currentTarget as TxG;
             let data = event.data;
             let type = event.type;
-            this.dragging = false;
+            currentTarget.dragging = false;
+            this.repaintTx(currentTarget);
             // console.log(event);
         }
 
@@ -148,16 +208,17 @@
             // context.x = newPosition.x;
             // context.y = newPosition.y;
             // }
-            let currentTarget: Graphics = event.currentTarget as Graphics;
+            let currentTarget: TxG = event.currentTarget as TxG;
             let data = event.data;
             let type = event.type;
 
             let p = event.data.getLocalPosition(event.currentTarget.parent);
 
-            if (this.dragging) {
-                // console.log(type, "moving to ", p);
+            if (currentTarget.dragging) {
+                console.log(type, "moving to ", p);
                 currentTarget.x = p.x;
                 currentTarget.y = p.y;
+                this.repaintTx(currentTarget);
             }
             // console.log(event);
         }
@@ -169,14 +230,69 @@
 
         mounted() {
             this.init();
+            this.reload(1);
             this.repaint();
-            this.animate();
+            // this.animate();
         }
 
         private onWindowResized() {
             let canvasWidth: number = this.canvasElement.offsetWidth;
             let canvasHeight: number = this.canvasElement.offsetHeight;
             this.app.renderer.resize(canvasWidth, canvasHeight);
+        }
+
+        private reload(height: number) {
+            console.log("reload");
+            this.txs = getSeqData(1);
+        }
+
+        private onMouseOver(event: PIXI.interaction.InteractionEvent) {
+            let ct: TxG = event.currentTarget as TxG;
+            this.infoAreaText.text = `Type: ${ct.tx.type} Team: ${ct.tx.owner} Bet: ${ct.tx.bet}`
+        }
+
+        private setupTxG(tx: Tx, team: Team): TxG{
+            let gfx = new TxG(tx, team);
+            gfx.interactive = true;
+            gfx.buttonMode = true;
+            gfx
+            // events for drag start
+                .on('mousedown', this.onDragStart)
+                .on('touchstart', this.onDragStart)
+                // events for drag end
+                .on('mouseup', this.onDragEnd)
+                .on('mouseupoutside', this.onDragEnd)
+                .on('touchend', this.onDragEnd)
+                .on('touchendoutside', this.onDragEnd)
+                // events for drag move
+                .on('mousemove', this.onDragMove)
+                .on('touchmove', this.onDragMove)
+                .on('mouseover', this.onMouseOver);
+            gfx.x = Math.random() * 500;
+            gfx.y = Math.random() * 500;
+
+            this.hashTx[tx.id] = gfx;
+            // builc children relationship
+            for (let parent of gfx.tx.parents){
+                this.hashTx[parent].txChildren.push(tx.id);
+            }
+            return gfx;
+        }
+
+        private judgeTeam(tx: Tx) :Team{
+            let team = this.nameTeams[tx.owner];
+
+            if (team === undefined) {
+                // randomly pick a color for this team.
+                let s  = randomcolor({
+                    luminosity: 'light',
+                    format: 'hex',
+                });
+                let color = parseInt(s.substr(1,6),16);
+                this.nameTeams[tx.owner] = new Team(tx.owner, color);
+            }
+            team = this.nameTeams[tx.owner];
+            return team;
         }
     }
 </script>
