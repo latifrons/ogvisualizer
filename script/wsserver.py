@@ -28,19 +28,17 @@ async def hello(websocket, path):
 
     while True:
         if len(tx_hashes) != 0:
-            parent_hash = [x for x in set([rando.choice(tx_hashes) for c in range(2)])]
+            parent_hash = [str(x) for x in set([rando.choice(tx_hashes) for c in range(2)])]
         else:
             parent_hash = []
         t = rando.random()
         if t < 0.1:
             tx = {
                 'type': 1,  # seq
-                'hash': rando.randint(0, 1000000),
+                'hash': str(rando.randint(0, 1000000)),
                 'parent_hash': parent_hash,
-                'from': 'Not used',
-                'to': 'Not used',
                 'nonce': 0,
-                'guarantee': rando.randint(0, 500),
+                'treasure': rando.randint(0, 500),
                 'value': 0,
                 'weight': max([txs[x]['weight'] for x in parent_hash]) + 1 if len(parent_hash) != 0 else 0,
             }
@@ -48,10 +46,12 @@ async def hello(websocket, path):
         else:
             tx = {
                 'type': 0,  # tx
-                'hash': rando.randint(0, 1000000),
+                'hash': str(rando.randint(0, 1000000)),
                 'parent_hash': parent_hash,
+                'from': rando.choice(teams),
+                'to': rando.choice(teams),
+                'guarantee': rando.randint(0, 500),
                 'nonce': 0,
-                'treasure': rando.randint(0, 500),
                 'height': height,
                 'weight': max([txs[x]['weight'] for x in parent_hash]) + 1 if len(parent_hash) != 0 else 0,
             }

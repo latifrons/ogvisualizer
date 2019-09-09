@@ -27,6 +27,7 @@
         public team: Team;
         public dragging: boolean = false;
         public txChildren: string[] = [];
+        public highlighting: boolean = false;
 
         constructor(tx: Tx, team: Team) {
             super();
@@ -59,6 +60,7 @@
         hashTx: Record<string, TxG> = {};
         gc: GraphConfiguration;
         nameTeams: Record<string, Team> = {};
+        socket: WebSocket;
 
         infoAreaText: PIXI.Text = new PIXI.Text("", new PIXI.TextStyle({
             fontFamily: 'Arial',
@@ -76,9 +78,11 @@
             wordWrap: true,
             wordWrapWidth: 440,
         }));
+        private currentHighlighting!: TxG;
 
         public constructor() {
             super();
+            this.socket = new WebSocket("ws://localhost:8765");
             this.gc = new GraphConfiguration(0, 0);
         }
 
@@ -103,10 +107,6 @@
 
         repaintTx(gfx: TxG) {
             gfx.clear();
-            gfx.lineStyle(2, 0x003300);
-            gfx.beginFill(gfx.team.color);
-            console.log(gfx.team.color);
-            gfx.drawCircle(0, 0, gfx.tx.bet / 10);
 
             // locate other and connect them
             for (let parent of gfx.tx.parents){
@@ -115,13 +115,25 @@
                     // TODO: makeup one
                     continue;
                 }
-                gfx.lineStyle(3, 0xFFFF00);
+                if (gfx.highlighting){
+                    gfx.lineStyle(3, 0xff0000);
+                }else{
+                    gfx.lineStyle(1, 0xfcffa6, 0.4);
+                }
+
                 gfx.moveTo(0,0);
                 gfx.lineTo(parentGfx.x - gfx.x, parentGfx.y - gfx.y);
             }
+
             for (let child of gfx.txChildren){
                 this.repaintTx(this.hashTx[child]);
             }
+            gfx.lineStyle(1, 0x0);
+            gfx.beginFill(gfx.team.color);
+            console.log(gfx.team.color);
+            let edge = gfx.tx.bet / 5;
+            gfx.drawRect(-edge/2, -edge/2, edge, edge);
+
         }
 
         init() {
@@ -132,7 +144,7 @@
 
             let pixiOptions: PIXI.ApplicationOptions = {
                 transparent: false,
-                backgroundColor: 0x1099bb,
+                backgroundColor: 0x0,
                 width: w,
                 height: h,
                 antialias: true,
@@ -232,6 +244,7 @@
             this.init();
             this.reload(1);
             this.repaint();
+            this.wsconnect();
             // this.animate();
         }
 
@@ -248,8 +261,26 @@
 
         private onMouseOver(event: PIXI.interaction.InteractionEvent) {
             let ct: TxG = event.currentTarget as TxG;
+            if (this.currentHighlighting){
+                if (this.currentHighlighting === ct){
+                    return;
+                }
+                this.currentHighlighting.highlighting = false;
+                this.repaintTx(this.currentHighlighting)
+            }
+
+            ct.highlighting = true;
+            this.currentHighlighting = ct;
+            this.repaintTx(this.currentHighlighting);
             this.infoAreaText.text = `Type: ${ct.tx.type} Team: ${ct.tx.owner} Bet: ${ct.tx.bet}`
         }
+        private onMouseOut(event: PIXI.interaction.InteractionEvent) {
+            if (this.currentHighlighting){
+                this.currentHighlighting.highlighting = false;
+                this.repaintTx(this.currentHighlighting);
+            }
+        }
+
 
         private setupTxG(tx: Tx, team: Team): TxG{
             let gfx = new TxG(tx, team);
@@ -267,9 +298,10 @@
                 // events for drag move
                 .on('mousemove', this.onDragMove)
                 .on('touchmove', this.onDragMove)
-                .on('mouseover', this.onMouseOver);
-            gfx.x = Math.random() * 500;
-            gfx.y = Math.random() * 500;
+                .on('mouseover', this.onMouseOver)
+                .on('mouseout', this.onMouseOut);
+            gfx.x = Math.random() * 70 + tx.weight * 100;
+            gfx.y = Math.random() * 800;
 
             this.hashTx[tx.id] = gfx;
             // builc children relationship
@@ -294,6 +326,30 @@
             team = this.nameTeams[tx.owner];
             return team;
         }
+
+        welcomeNewTx(data: MessageEvent){
+            console.log(data.data);
+            let tx = Tx.parse(data.data);
+            console.log(tx);
+            if (tx == null){
+                return;
+            }
+            this.handleTx(tx);
+
+        }
+
+        wsconnect() {
+            this.socket.onopen = () => {
+                this.socket.onmessage = this.welcomeNewTx;
+            };
+        }
+        disconnect() {
+            this.socket.close();
+        }
+        sendMessage(e: string) {
+            this.socket.send(e);
+        }
+
     }
 </script>
 <style>

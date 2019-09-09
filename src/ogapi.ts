@@ -6,12 +6,24 @@ export class Tx {
     public parents: string[];
     public weight: number = 0;
 
-    constructor(id: string, type: string, owner: string, bet: number, parents: string[]) {
+    constructor(id: string, type: string, owner: string, bet: number, parents: string[], weight: number) {
         this.id = id;
         this.type = type;
         this.owner = owner;
         this.bet = bet;
         this.parents = parents;
+        this.weight = weight;
+    }
+
+    static parse(data: string):Tx|null{
+        let obj = JSON.parse(data);
+        switch(obj['type']){
+            case 0: // Tx
+                return new Tx(obj['hash'], obj['type'], obj['from'], obj['guarantee'], obj['parent_hash'], obj['weight']);
+            case 1: // Seq
+                return new Tx(obj['hash'], obj['type'], "sequencer", obj['treasure'], obj['parent_hash'], obj['weight']);
+        }
+        return null;
     }
 }
 
