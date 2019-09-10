@@ -7,6 +7,7 @@ import store from './store';
 Vue.config.productionTip = false;
 
 Vue.component('kc-graph', require('./components/KcGraph.vue').default);
+Vue.component('scrollpanetest', require('./components/ScrollPaneTest').default);
 
 
 new Vue({

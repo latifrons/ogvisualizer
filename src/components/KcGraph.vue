@@ -56,6 +56,7 @@
         txs: Tx[] = [];
 
         app!: PIXI.Application;
+        mainArea!: PIXI.Container;
         canvasElement!: HTMLElement;
 
         hashTx: Record<string, TxG> = {};
@@ -106,7 +107,7 @@
             // this.app.stage.addChild(this.gfx);
         }
 
-        repaintTx(gfx: TxG, recursive: boolean=true) {
+        repaintTx(gfx: TxG, repaintChildren: boolean= true, repaintParents: boolean = true, parentHighlighing = false) {
             gfx.clear();
 
             // locate other and connect them
@@ -116,33 +117,43 @@
                     // TODO: makeup one
                     continue;
                 }
-                if (gfx.highlighting){
-                    gfx.lineStyle(3, 0xff0000);
+                if (gfx.highlighting){ // self highlighting
+                    gfx.lineStyle(3, 0xec4e20, 1);
+                }else if (parentHighlighing) { // highlighted because of hovering on the parent
+                    gfx.lineStyle(2, 0xe5d4ce, 0.7);
                 }else{
                     gfx.lineStyle(1, 0xfcffa6, 0.4);
                 }
 
                 gfx.moveTo(0,0);
                 gfx.lineTo(parentGfx.x - gfx.x, parentGfx.y - gfx.y);
+                if (repaintParents){
+                    this.repaintTx(parentGfx, false, false);
+                }
             }
 
-            if (recursive){
+
+            if (repaintChildren){
                 for (let child of gfx.txChildren){
-                    this.repaintTx(this.hashTx[child], recursive = false);
+                    console.log("repaint children", gfx.tx);
+                    this.repaintTx(this.hashTx[child], false, false, gfx.highlighting);
                 }
             }
 
             gfx.lineStyle(1, 0x0);
-            gfx.beginFill(gfx.team.color);
-            console.log(gfx.team.color);
+            if (gfx.children.length == 0){
+                gfx.beginFill(gfx.team.color);
+            }else{
+                gfx.beginFill(gfx.team.color, 0.5);
+            }
 
             gfx.drawRect(-gfx.radius/2, -gfx.radius/2, gfx.radius, gfx.radius);
 
         }
 
         init() {
-            // Determine the width and height of the renderer wrapper element.
             this.canvasElement = this.$refs.renderArea as HTMLElement;
+            // Determine the width and height of the renderer wrapper element.
             const w = this.canvasElement.offsetWidth;
             const h = this.canvasElement.offsetHeight;
 
@@ -167,7 +178,12 @@
             this.infoAreaText.text = 'Hover to see the detailed info';
 
             this.app.stage.addChild(this.infoAreaText);
-            this.app.stage.interactive = true;
+
+            this.mainArea = new PIXI.Container();
+            this.mainArea.interactive = true;
+
+            this.app.stage.addChild(this.mainArea);
+            // this.app.stage.interactive = true;
             // this.app.renderer.plugins.interaction.moveWhenInside = true;
         }
 
@@ -179,7 +195,7 @@
             let team = this.judgeTeam(tx);
             let gfx = this.setupTxG(tx,team);
             this.repaintTx(gfx);
-            this.app.stage.addChild(gfx);
+            this.mainArea.addChild(gfx);
         }
 
         onDragStart(event: PIXI.interaction.InteractionEvent) {
@@ -231,7 +247,6 @@
             let p = event.data.getLocalPosition(event.currentTarget.parent);
 
             if (currentTarget.dragging) {
-                console.log(type, "moving to ", p);
                 currentTarget.x = p.x;
                 currentTarget.y = p.y;
                 this.repaintTx(currentTarget);
@@ -304,7 +319,7 @@
                 .on('mouseover', this.onMouseOver)
                 .on('mouseout', this.onMouseOut);
 
-            gfx.radius = (1 + Math.log10(gfx.tx.bet)) * this.gc.h / 100;
+            gfx.radius = Math.min(Math.log10(gfx.tx.bet) * this.gc.h / 100, 20);
             gfx.x = Math.random() * 70 + tx.weight * 100;
             let suggestedY = gfx.radius + Math.random() * (this.gc.h - gfx.radius * 2);
             gfx.y = suggestedY;
