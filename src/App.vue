@@ -5,7 +5,7 @@
 <!--        <kc-graph style="width: 1536px; height: 800px;">-->
             <!--            <kc-curve v-for="n in 1" :x="3*n" :y="3*n"></kc-curve>-->
 <!--        </kc-graph>-->
-        <scrollpanetest style="width: 1600px; height: 400px"></scrollpanetest>
+        <scrollpanetest style="width: 1500px; height: 400px"></scrollpanetest>
     </div>
 </template>
 

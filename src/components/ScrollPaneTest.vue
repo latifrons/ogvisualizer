@@ -55,9 +55,14 @@
             let gfx = new Graphics();
             gfx.lineStyle(5, 0xffffff,1);
             gfx.moveTo(0,0);
-            gfx.lineTo(3000,300);
+            gfx.lineTo(15000,400);
 
-            let scrollPane = new ScrollPane(gfx);
+            gfx.moveTo(15000,0);
+            gfx.lineTo(0,400);
+
+            let scrollPane = new ScrollPane(gfx, w, h);
+            scrollPane.setMaxX(15000);
+            scrollPane.setMinX(0);
 
             this.app.stage.addChild(scrollPane);
             // this.app.stage.interactive = true;
