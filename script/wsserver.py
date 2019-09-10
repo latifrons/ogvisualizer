@@ -38,7 +38,7 @@ async def hello(websocket, path):
                 'hash': str(rando.randint(0, 1000000)),
                 'parent_hash': parent_hash,
                 'nonce': 0,
-                'treasure': rando.randint(0, 500),
+                'treasure': rando.randint(0, 200000),
                 'value': 0,
                 'weight': max([txs[x]['weight'] for x in parent_hash]) + 1 if len(parent_hash) != 0 else 0,
             }
@@ -50,7 +50,7 @@ async def hello(websocket, path):
                 'parent_hash': parent_hash,
                 'from': rando.choice(teams),
                 'to': rando.choice(teams),
-                'guarantee': rando.randint(0, 500),
+                'guarantee': rando.randint(0, 200000),
                 'nonce': 0,
                 'height': height,
                 'weight': max([txs[x]['weight'] for x in parent_hash]) + 1 if len(parent_hash) != 0 else 0,

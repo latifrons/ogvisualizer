@@ -43,6 +43,7 @@ export function getSeqData(height: number): Tx[] {
             owner: '0xBB',
             bet: 100,
             parents: ['0x1'],
+            weight: 1,
         },
         {
             id: '0x3',
@@ -50,6 +51,7 @@ export function getSeqData(height: number): Tx[] {
             owner: '0xCC',
             bet: 150,
             parents: ['0x1', '0x2'],
+            weight: 2,
         },
         {
             id: '0x4',
@@ -57,6 +59,7 @@ export function getSeqData(height: number): Tx[] {
             owner: '0xDD',
             bet: 200,
             parents: ['0x2', '0x3'],
+            weight: 3,
         },
     ];
 }

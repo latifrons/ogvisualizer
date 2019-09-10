@@ -28,6 +28,7 @@
         public dragging: boolean = false;
         public txChildren: string[] = [];
         public highlighting: boolean = false;
+        public radius: number = 0;
 
         constructor(tx: Tx, team: Team) {
             super();
@@ -105,7 +106,7 @@
             // this.app.stage.addChild(this.gfx);
         }
 
-        repaintTx(gfx: TxG) {
+        repaintTx(gfx: TxG, recursive: boolean=true) {
             gfx.clear();
 
             // locate other and connect them
@@ -125,14 +126,17 @@
                 gfx.lineTo(parentGfx.x - gfx.x, parentGfx.y - gfx.y);
             }
 
-            for (let child of gfx.txChildren){
-                this.repaintTx(this.hashTx[child]);
+            if (recursive){
+                for (let child of gfx.txChildren){
+                    this.repaintTx(this.hashTx[child], recursive = false);
+                }
             }
+
             gfx.lineStyle(1, 0x0);
             gfx.beginFill(gfx.team.color);
             console.log(gfx.team.color);
-            let edge = gfx.tx.bet / 5;
-            gfx.drawRect(-edge/2, -edge/2, edge, edge);
+
+            gfx.drawRect(-gfx.radius/2, -gfx.radius/2, gfx.radius, gfx.radius);
 
         }
 
@@ -262,11 +266,10 @@
         private onMouseOver(event: PIXI.interaction.InteractionEvent) {
             let ct: TxG = event.currentTarget as TxG;
             if (this.currentHighlighting){
-                if (this.currentHighlighting === ct){
-                    return;
+                if (this.currentHighlighting !== ct){
+                    this.currentHighlighting.highlighting = false;
+                    this.repaintTx(this.currentHighlighting)
                 }
-                this.currentHighlighting.highlighting = false;
-                this.repaintTx(this.currentHighlighting)
             }
 
             ct.highlighting = true;
@@ -300,8 +303,11 @@
                 .on('touchmove', this.onDragMove)
                 .on('mouseover', this.onMouseOver)
                 .on('mouseout', this.onMouseOut);
+
+            gfx.radius = (1 + Math.log10(gfx.tx.bet)) * this.gc.h / 100;
             gfx.x = Math.random() * 70 + tx.weight * 100;
-            gfx.y = Math.random() * 800;
+            let suggestedY = gfx.radius + Math.random() * (this.gc.h - gfx.radius * 2);
+            gfx.y = suggestedY;
 
             this.hashTx[tx.id] = gfx;
             // builc children relationship
