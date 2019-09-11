@@ -11,6 +11,7 @@
     import Vue from "vue";
     import Graphics = PIXI.Graphics;
     import randomcolor from "randomcolor"
+    import {ScrollPane} from "@/components/ScrollPane"
 
     class Team {
         public name: string;
@@ -57,6 +58,8 @@
 
         app!: PIXI.Application;
         mainArea!: PIXI.Container;
+        scrollPane!: ScrollPane;
+
         canvasElement!: HTMLElement;
 
         hashTx: Record<string, TxG> = {};
@@ -182,7 +185,10 @@
             this.mainArea = new PIXI.Container();
             this.mainArea.interactive = true;
 
-            this.app.stage.addChild(this.mainArea);
+            this.scrollPane = new ScrollPane(this.mainArea,w,h);
+            this.scrollPane.setMaxX(w);
+
+            this.app.stage.addChild(this.scrollPane);
             // this.app.stage.interactive = true;
             // this.app.renderer.plugins.interaction.moveWhenInside = true;
         }
@@ -329,6 +335,8 @@
             for (let parent of gfx.tx.parents){
                 this.hashTx[parent].txChildren.push(tx.id);
             }
+            // update viewport
+            this.scrollPane.setMaxX(Math.max(this.scrollPane.maxX, gfx.x));
             return gfx;
         }
 

@@ -28,10 +28,15 @@ export class ScrollPane extends PIXI.Container{
     }
 
     setMaxX(maxX: number){
-        this.updateRange(this.minX, maxX);
+        if (this.maxX != maxX){
+            this.updateRange(this.minX, maxX);
+        }
+
     }
     setMinX(minX: number){
-        this.updateRange(minX, this.maxX);
+        if (this.minX != minX){
+            this.updateRange(minX, this.maxX);
+        }
     }
 
     setupScrollBar(){
@@ -118,10 +123,10 @@ export class ScrollPane extends PIXI.Container{
     repaintScrollBar(){
         this.scrollBar.clear();
         // background
-        this.scrollBar.beginFill(0x333333);
+        this.scrollBar.beginFill(0x333333,0.5);
         this.scrollBar.drawRect(0,0, this.width, barHeight);
         // foreground
-        this.scrollBar.beginFill(0x888888);
+        this.scrollBar.beginFill(0x888888,0.5);
         console.log(this.getCurrentBarX(), this.getCurrentBarWidth());
         this.scrollBar.drawRect(this.getCurrentBarX(),0, this.getCurrentBarWidth(), barHeight);
     }
