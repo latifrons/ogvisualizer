@@ -1,7 +1,6 @@
 const barHeight = 20;
 
 export class ScrollPane extends PIXI.Container{
-    viewPercentage: number = 0;
     content: PIXI.DisplayObject;
     widthDesign: number;
     heightDesign: number;
@@ -9,10 +8,11 @@ export class ScrollPane extends PIXI.Container{
     minX = 0;
     maxX = 0;
 
+    viewX = 0;
     scrollBarDragging = false;
-    scrollBarDraggingStartingPercentage = 0;
-    scrollBarDraggingStartingX = 0;
     smoothForward = false;
+    isFollowing = true;
+    scrollBarStartingXOffset = 0;
 
 
     constructor(content: PIXI.DisplayObject, width: number, height: number, smoothForward: boolean = false){
@@ -27,6 +27,7 @@ export class ScrollPane extends PIXI.Container{
 
         this.setupScrollBar();
         this.addChild(this.scrollBar);
+
     }
 
     setMaxX(maxX: number){
@@ -66,12 +67,13 @@ export class ScrollPane extends PIXI.Container{
     private onDragStart(event: PIXI.interaction.InteractionEvent) {
         let p = event.data.getLocalPosition(event.currentTarget.parent);
         this.scrollBarDragging = true;
-        this.scrollBarDraggingStartingPercentage = this.viewPercentage;
-        this.scrollBarDraggingStartingX = p.x;
+        this.scrollBarStartingXOffset = p.x - this.getCurrentBarX();
+        this.isFollowing = false;
     }
 
     private onDragEnd(event: PIXI.interaction.InteractionEvent) {
         this.scrollBarDragging = false;
+        this.isFollowing = this.isKeepingLatest()
     }
 
     private onDragMove(event: PIXI.interaction.InteractionEvent) {
@@ -79,41 +81,48 @@ export class ScrollPane extends PIXI.Container{
             return;
         }
         let p = event.data.getLocalPosition(event.currentTarget.parent);
-        let newX = (p.x - this.scrollBarDraggingStartingX) + this.widthDesign * this.scrollBarDraggingStartingPercentage;
+        let newX = p.x - this.scrollBarStartingXOffset;
         newX = Math.max(0, Math.min(newX, this.widthDesign - this.getCurrentBarWidth()));
-        this.viewPercentage = newX / this.widthDesign;
-        this.updateViewX(this.viewPercentage);
+        this.viewX = this.minX + (this.maxX - this.minX) * (newX / this.widthDesign);
+        this.updateViewX();
     }
 
-    updateViewX(viewPercentage:number){
-        this.viewPercentage = viewPercentage;
+    updateViewX(){
         this.content.x = -this.getCurrentViewX();
         this.repaintScrollBar();
     }
 
     isKeepingLatest(){
-        return Math.abs(this.viewPercentage - this.getMaxViewPercentage()) < 0.00001
+        return Math.abs(this.getCurrentBarX() + this.getCurrentBarWidth() - this.widthDesign) < 0.001;
     }
 
+    /**
+     * redefine the left and right bound of the whole canvas to show.
+     * it will also repaint the scrollbar since the full range is changed.
+     * @param minX
+     * @param maxX
+     */
     updateRange(minX: number, maxX: number){
-        // test if the scroll bar is on the very right
-        let keepLatest = this.isKeepingLatest();
         this.minX = minX;
         this.maxX = maxX;
-        if (keepLatest){
-            this.viewPercentage = this.getMaxViewPercentage();
-        }
+        // viewX is not changing unless it is out of range.
+        this.viewX = Math.min(this.maxX, this.viewX);
+        this.viewX = Math.max(this.minX, this.viewX);
         this.repaintScrollBar();
         // this.updateViewX(this.viewPercentage)
     }
 
 
     getCurrentViewX(): number{
-        return this.minX + (this.maxX - this.minX)*this.viewPercentage;
+        return this.viewX;
     }
 
     getCurrentBarX() : number{
-        return this.widthDesign * this.viewPercentage;
+        return (this.viewX-this.minX) / (this.maxX - this.minX) * this.widthDesign;
+    }
+
+    getCurrentViewPercentage(): number{
+        return this.widthDesign / (this.maxX - this.minX);
     }
 
     getCurrentBarWidth(): number{
@@ -134,15 +143,17 @@ export class ScrollPane extends PIXI.Container{
     }
 
     moveForward(deltaTime: number) {
-        if (!this.smoothForward || !this.isKeepingLatest()){
+        if (!this.smoothForward || !this.isFollowing || this.scrollBarDragging){
             return;
         }
         // this is the target
         // this.content.x = -this.getCurrentViewX();
         // here is the gap
-        let gap = this.getCurrentViewX() - (-this.content.x);
-        if (gap > 0){
-            this.content.x -= deltaTime * (Math.max(1, gap / 20));
+        let gap = (this.maxX - this.widthDesign) - (-this.content.x);
+        // console.log("gap", (this.maxX - this.widthDesign), this.content.x, gap);
+        if (Math.abs(gap) > 0.001){
+            this.viewX += deltaTime * (Math.max(1, gap / 20));
+            this.updateViewX();
         }
     }
 }

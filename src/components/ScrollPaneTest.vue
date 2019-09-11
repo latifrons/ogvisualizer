@@ -61,11 +61,15 @@
             gfx.moveTo(15000,0);
             gfx.lineTo(0,400);
 
-            this.scrollPane = new ScrollPane(gfx, w, h);
-            this.scrollPane.setMaxX(1400);
+            this.scrollPane = new ScrollPane(gfx, w, h, true);
+            this.scrollPane.setMaxX(7000);
             this.scrollPane.setMinX(0);
 
             this.app.stage.addChild(this.scrollPane);
+            this.app.ticker.add((deltaTime => {
+                this.scrollPane.moveForward(deltaTime);
+            }))
+
             // this.app.stage.interactive = true;
             // this.app.renderer.plugins.interaction.moveWhenInside = true;
         }

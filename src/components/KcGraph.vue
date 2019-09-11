@@ -16,7 +16,7 @@
     const TYPE_SEQUENCER = 1;
     const TYPE_TX = 0;
 
-    const MAX_NODES = 50;
+    const MAX_NODES = 500;
 
     class Team {
         public name: string;
