@@ -58,7 +58,6 @@
     @Component
     export default class KcGraph extends Vue {
 
-        @Prop()
         txs: Tx[] = [];
 
         app!: PIXI.Application;
@@ -109,7 +108,6 @@
 
             // draw all txs
             for (let tx of this.txs) {
-                console.log(tx.bet);
                 this.handleTx(tx);
             }
             // this.app.stage.addChild(this.gfx);
@@ -290,9 +288,12 @@
 
         mounted() {
             this.init();
-            this.reload(1);
+            this.reload();
             this.repaint();
-            this.wsconnect();
+
+            if (this.$route.query["mode"] != "static"){
+                this.wsconnect();
+            }
             // this.animate();
         }
 
@@ -302,9 +303,12 @@
             this.app.renderer.resize(canvasWidth, canvasHeight);
         }
 
-        private reload(height: number) {
-            console.log("reload");
-            this.txs = getSeqData(1);
+        private reload() {
+            let height = this.$route.query["height"] as string;
+            if (height ==  null){
+                return;
+            }
+            this.txs = getSeqData(parseInt(height));
         }
 
         private onMouseOver(event: PIXI.interaction.InteractionEvent) {

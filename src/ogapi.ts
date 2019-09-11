@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 export class Tx {
     public id: string;
     public type: number;
@@ -31,6 +33,12 @@ export class Tx {
 }
 
 export function getSeqData(height: number): Tx[] {
+    axios.get('https://jsonplaceholder.typicode.com/todos/1').then(response => {
+        let data = response.data;
+        console.log(data);
+        // callback(data);
+    });
+
     return []
     // return [
     //     {
