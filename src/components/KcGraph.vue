@@ -13,6 +13,9 @@
     import randomcolor from "randomcolor"
     import {ScrollPane} from "@/components/ScrollPane"
 
+    const TYPE_SEQUENCER = 1;
+    const TYPE_TX = 0;
+
     class Team {
         public name: string;
         public color: number;
@@ -150,8 +153,12 @@
                 gfx.beginFill(gfx.team.color, 0.5);
             }
 
-            gfx.drawRect(-gfx.radius/2, -gfx.radius/2, gfx.radius, gfx.radius);
-
+            if (gfx.tx.type == TYPE_SEQUENCER){
+                gfx.lineStyle(3, 0xEEEEEE);
+                gfx.drawCircle(0,0,gfx.radius);
+            }else{
+                gfx.drawRect(-gfx.radius/2, -gfx.radius/2, gfx.radius, gfx.radius);
+            }
         }
 
         init() {
@@ -185,12 +192,15 @@
             this.mainArea = new PIXI.Container();
             this.mainArea.interactive = true;
 
-            this.scrollPane = new ScrollPane(this.mainArea,w,h);
+            this.scrollPane = new ScrollPane(this.mainArea,w,h,true);
             this.scrollPane.setMaxX(w);
 
             this.app.stage.addChild(this.scrollPane);
             // this.app.stage.interactive = true;
             // this.app.renderer.plugins.interaction.moveWhenInside = true;
+            this.app.ticker.add((deltaTime => {
+                this.scrollPane.moveForward(deltaTime);
+            }))
         }
 
         handleTx(tx: Tx) {
@@ -327,8 +337,12 @@
 
             gfx.radius = Math.min(Math.log10(gfx.tx.bet) * this.gc.h / 100, 20);
             gfx.x = Math.random() * 70 + tx.weight * 100;
-            let suggestedY = gfx.radius + Math.random() * (this.gc.h - gfx.radius * 2);
-            gfx.y = suggestedY;
+
+            if (gfx.tx.type == TYPE_SEQUENCER){
+                gfx.y = this.gc.h / 2;
+            }else{
+                gfx.y = gfx.radius + Math.random() * (this.gc.h - gfx.radius * 2);
+            }
 
             this.hashTx[tx.id] = gfx;
             // builc children relationship
@@ -336,7 +350,7 @@
                 this.hashTx[parent].txChildren.push(tx.id);
             }
             // update viewport
-            this.scrollPane.setMaxX(Math.max(this.scrollPane.maxX, gfx.x));
+            this.scrollPane.setMaxX(Math.max(this.scrollPane.maxX, gfx.x + gfx.radius));
             return gfx;
         }
 

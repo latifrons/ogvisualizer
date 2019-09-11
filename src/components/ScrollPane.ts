@@ -12,15 +12,17 @@ export class ScrollPane extends PIXI.Container{
     scrollBarDragging = false;
     scrollBarDraggingStartingPercentage = 0;
     scrollBarDraggingStartingX = 0;
+    smoothForward = false;
 
 
-    constructor(content: PIXI.DisplayObject, width: number, height: number){
+    constructor(content: PIXI.DisplayObject, width: number, height: number, smoothForward: boolean = false){
         // scroll bar
         super();
         this.content = content;
         this.widthDesign = width;
         this.heightDesign = height;
         this.maxX = this.width;
+        this.smoothForward = smoothForward;
         this.addChild(this.content);
 
         this.setupScrollBar();
@@ -90,17 +92,21 @@ export class ScrollPane extends PIXI.Container{
         this.repaintScrollBar();
     }
 
+    isKeepingLatest(){
+        return Math.abs(this.viewPercentage - this.getMaxViewPercentage()) < 0.00001
+    }
+
     updateRange(minX: number, maxX: number){
         // test if the scroll bar is on the very right
-        let keepLatest = Math.abs(this.viewPercentage - this.getMaxViewPercentage())< 0.00001;
-        console.log("keep latest", this.viewPercentage, this.getMaxViewPercentage());
+        let keepLatest = this.isKeepingLatest();
         this.minX = minX;
         this.maxX = maxX;
         if (keepLatest){
             this.viewPercentage = this.getMaxViewPercentage();
         }
         console.log("percentage", this.viewPercentage);
-        this.updateViewX(this.viewPercentage)
+        this.repaintScrollBar();
+        // this.updateViewX(this.viewPercentage)
     }
 
 
@@ -129,5 +135,18 @@ export class ScrollPane extends PIXI.Container{
         this.scrollBar.beginFill(0x888888,0.5);
         console.log(this.getCurrentBarX(), this.getCurrentBarWidth());
         this.scrollBar.drawRect(this.getCurrentBarX(),0, this.getCurrentBarWidth(), barHeight);
+    }
+
+    moveForward(deltaTime: number) {
+        if (!this.smoothForward || !this.isKeepingLatest()){
+            return;
+        }
+        // this is the target
+        // this.content.x = -this.getCurrentViewX();
+        // here is the gap
+        let gap = this.getCurrentViewX() - (-this.content.x);
+        if (gap > 0){
+            this.content.x -= deltaTime * (Math.max(1, gap / 20));
+        }
     }
 }

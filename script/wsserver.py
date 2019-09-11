@@ -33,6 +33,7 @@ async def hello(websocket, path):
             parent_hash = []
         t = rando.random()
         if t < 0.1:
+            parent_hash = tx_hashes
             tx = {
                 'type': 1,  # seq
                 'hash': str(rando.randint(0, 1000000)),
@@ -43,6 +44,8 @@ async def hello(websocket, path):
                 'weight': max([txs[x]['weight'] for x in parent_hash]) + 1 if len(parent_hash) != 0 else 0,
             }
             height += 1
+            tx_hashes = []
+            txs = {}
         else:
             tx = {
                 'type': 0,  # tx
@@ -59,7 +62,7 @@ async def hello(websocket, path):
         tx_hashes.append(tx['hash'])
         txs[tx['hash']] = tx
         await websocket.send(json.dumps(tx))
-        time.sleep(1)
+        time.sleep(0.4)
 
 
 if __name__ == '__main__':

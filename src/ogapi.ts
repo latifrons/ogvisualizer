@@ -1,12 +1,12 @@
 export class Tx {
     public id: string;
-    public type: string;
+    public type: number;
     public owner: string;
     public bet: number;
     public parents: string[];
     public weight: number = 0;
 
-    constructor(id: string, type: string, owner: string, bet: number, parents: string[], weight: number) {
+    constructor(id: string, type: number, owner: string, bet: number, parents: string[], weight: number) {
         this.id = id;
         this.type = type;
         this.owner = owner;
@@ -31,7 +31,7 @@ export function getSeqData(height: number): Tx[] {
     return [
         {
             id: '0x1',
-            type: 's',
+            type: 1,
             owner: '0xAA',
             bet: 50,
             parents: [],
@@ -39,7 +39,7 @@ export function getSeqData(height: number): Tx[] {
         },
         {
             id: '0x2',
-            type: 'tx',
+            type: 0,
             owner: '0xBB',
             bet: 100,
             parents: ['0x1'],
@@ -47,7 +47,7 @@ export function getSeqData(height: number): Tx[] {
         },
         {
             id: '0x3',
-            type: 'tx',
+            type: 0,
             owner: '0xCC',
             bet: 150,
             parents: ['0x1', '0x2'],
@@ -55,7 +55,7 @@ export function getSeqData(height: number): Tx[] {
         },
         {
             id: '0x4',
-            type: 's',
+            type: 1,
             owner: '0xDD',
             bet: 200,
             parents: ['0x2', '0x3'],

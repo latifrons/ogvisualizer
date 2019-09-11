@@ -19,35 +19,6 @@
 
     @Component
     export default class App extends Vue{
-        // @Prop()
-        // propA: number = 1
-        //
-        // @Prop({ default: 'default value' })
-        // propB: string
-        //
-        // @Prop([String, Boolean])
-        // propC: string | boolean
-        //
-        // @Prop({ type: null })
-        // propD: any
-
-        @Prop()
-        x: number = 0;
-
-        @Prop()
-        alldata: Tx[] = [];
-
-        mounted() {
-            this.alldata = getSeqData(1);
-        }
-
-        get computedMsg(){
-            return 'computed' + this.x
-        }
-
-        setX(x:number){
-            this.x =x ;
-        }
     }
 </script>
 
