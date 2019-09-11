@@ -28,12 +28,10 @@ export class ScrollPane extends PIXI.Container{
     }
 
     setMaxX(maxX: number){
-        this.maxX = maxX;
-        this.updateRange();
+        this.updateRange(this.minX, maxX);
     }
     setMinX(minX: number){
-        this.minX = minX;
-        this.updateRange();
+        this.updateRange(minX, this.maxX);
     }
 
     setupScrollBar(){
@@ -63,12 +61,10 @@ export class ScrollPane extends PIXI.Container{
         this.scrollBarDragging = true;
         this.scrollBarDraggingStartingPercentage = this.viewPercentage;
         this.scrollBarDraggingStartingX = p.x;
-        this.updateRange();
     }
 
     private onDragEnd(event: PIXI.interaction.InteractionEvent) {
         this.scrollBarDragging = false;
-        this.updateRange();
     }
 
     private onDragMove(event: PIXI.interaction.InteractionEvent) {
@@ -80,14 +76,28 @@ export class ScrollPane extends PIXI.Container{
         newX = Math.max(0, Math.min(newX, this.widthDesign - this.getCurrentBarWidth()));
         console.log("dragmove", newX);
         this.viewPercentage = newX / this.widthDesign;
-        this.updateRange();
+        this.updateViewX(this.viewPercentage);
     }
 
-    updateRange(){
-        console.log(this.viewPercentage);
+    updateViewX(viewPercentage:number){
+        this.viewPercentage = viewPercentage;
         this.content.x = -this.getCurrentViewX();
         this.repaintScrollBar();
     }
+
+    updateRange(minX: number, maxX: number){
+        // test if the scroll bar is on the very right
+        let keepLatest = Math.abs(this.viewPercentage - this.getMaxViewPercentage())< 0.00001;
+        console.log("keep latest", this.viewPercentage, this.getMaxViewPercentage());
+        this.minX = minX;
+        this.maxX = maxX;
+        if (keepLatest){
+            this.viewPercentage = this.getMaxViewPercentage();
+        }
+        console.log("percentage", this.viewPercentage);
+        this.updateViewX(this.viewPercentage)
+    }
+
 
     getCurrentViewX(): number{
         return this.minX + (this.maxX - this.minX)*this.viewPercentage;
@@ -99,6 +109,10 @@ export class ScrollPane extends PIXI.Container{
 
     getCurrentBarWidth(): number{
         return this.widthDesign * this.widthDesign / (this.maxX - this.minX);
+    }
+    getMaxViewPercentage():number{
+        console.log("wd, maxx", this.widthDesign, this.maxX);
+        return Math.max(0, 1- this.widthDesign / this.maxX)
     }
 
     repaintScrollBar(){

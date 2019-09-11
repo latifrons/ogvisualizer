@@ -27,6 +27,7 @@
         app!: PIXI.Application;
         gc!: GraphConfiguration;
         canvasElement!: HTMLElement;
+        scrollPane!: ScrollPane;
 
         public constructor() {
             super();
@@ -60,20 +61,26 @@
             gfx.moveTo(15000,0);
             gfx.lineTo(0,400);
 
-            let scrollPane = new ScrollPane(gfx, w, h);
-            scrollPane.setMaxX(15000);
-            scrollPane.setMinX(0);
+            this.scrollPane = new ScrollPane(gfx, w, h);
+            this.scrollPane.setMaxX(1400);
+            this.scrollPane.setMinX(0);
 
-            this.app.stage.addChild(scrollPane);
+            this.app.stage.addChild(this.scrollPane);
             // this.app.stage.interactive = true;
             // this.app.renderer.plugins.interaction.moveWhenInside = true;
         }
 
         mounted() {
             this.init();
+            this.startMoving();
         }
 
 
+        private startMoving() {
+            let intervalId = setInterval(() => {
+                this.scrollPane.setMaxX(this.scrollPane.maxX + 100);
+            }, 2000)
+        }
     }
 
 
