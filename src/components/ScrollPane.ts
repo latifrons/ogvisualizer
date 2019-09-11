@@ -81,7 +81,6 @@ export class ScrollPane extends PIXI.Container{
         let p = event.data.getLocalPosition(event.currentTarget.parent);
         let newX = (p.x - this.scrollBarDraggingStartingX) + this.widthDesign * this.scrollBarDraggingStartingPercentage;
         newX = Math.max(0, Math.min(newX, this.widthDesign - this.getCurrentBarWidth()));
-        console.log("dragmove", newX);
         this.viewPercentage = newX / this.widthDesign;
         this.updateViewX(this.viewPercentage);
     }
@@ -104,7 +103,6 @@ export class ScrollPane extends PIXI.Container{
         if (keepLatest){
             this.viewPercentage = this.getMaxViewPercentage();
         }
-        console.log("percentage", this.viewPercentage);
         this.repaintScrollBar();
         // this.updateViewX(this.viewPercentage)
     }
@@ -122,7 +120,6 @@ export class ScrollPane extends PIXI.Container{
         return this.widthDesign * this.widthDesign / (this.maxX - this.minX);
     }
     getMaxViewPercentage():number{
-        console.log("wd, maxx", this.widthDesign, this.maxX);
         return Math.max(0, 1- this.widthDesign / this.maxX)
     }
 
@@ -133,7 +130,6 @@ export class ScrollPane extends PIXI.Container{
         this.scrollBar.drawRect(0,0, this.width, barHeight);
         // foreground
         this.scrollBar.beginFill(0x888888,0.5);
-        console.log(this.getCurrentBarX(), this.getCurrentBarWidth());
         this.scrollBar.drawRect(this.getCurrentBarX(),0, this.getCurrentBarWidth(), barHeight);
     }
 

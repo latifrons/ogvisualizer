@@ -16,6 +16,8 @@
     const TYPE_SEQUENCER = 1;
     const TYPE_TX = 0;
 
+    const MAX_NODES = 50;
+
     class Team {
         public name: string;
         public color: number;
@@ -69,6 +71,7 @@
         gc: GraphConfiguration;
         nameTeams: Record<string, Team> = {};
         socket: WebSocket;
+        seqs: TxG[] = [];
 
         infoAreaText: PIXI.Text = new PIXI.Text("", new PIXI.TextStyle({
             fontFamily: 'Arial',
@@ -208,8 +211,17 @@
                 // already there. duplicate tx.
                 return;
             }
+            while (this.mainArea.children.length > MAX_NODES){
+                // remove one
+                let canContinue = this.clearOldestSequencer();
+                if (!canContinue){
+                    break;
+                }
+            }
             let team = this.judgeTeam(tx);
             let gfx = this.setupTxG(tx,team);
+
+            this.infoAreaText.text = Object.keys(this.hashTx).length.toString();
             this.repaintTx(gfx);
             this.mainArea.addChild(gfx);
         }
@@ -306,7 +318,15 @@
             ct.highlighting = true;
             this.currentHighlighting = ct;
             this.repaintTx(this.currentHighlighting);
-            this.infoAreaText.text = `Type: ${ct.tx.type} Team: ${ct.tx.owner} Bet: ${ct.tx.bet}`
+            switch (ct.tx.type){
+                case TYPE_SEQUENCER:
+                    this.infoAreaText.text = `Sequencer ${ct.tx.height} : ${ct.tx.bet}`;
+                    break;
+                case TYPE_TX:
+                    this.infoAreaText.text = `Tx: ${ct.tx.owner} Guarantee: ${ct.tx.bet}`;
+                    break;
+            }
+
         }
         private onMouseOut(event: PIXI.interaction.InteractionEvent) {
             if (this.currentHighlighting){
@@ -347,10 +367,18 @@
             this.hashTx[tx.id] = gfx;
             // builc children relationship
             for (let parent of gfx.tx.parents){
-                this.hashTx[parent].txChildren.push(tx.id);
+                let parentTxg = this.hashTx[parent];
+                if (parentTxg){
+                    this.hashTx[parent].txChildren.push(tx.id);
+                }
             }
             // update viewport
             this.scrollPane.setMaxX(Math.max(this.scrollPane.maxX, gfx.x + gfx.radius));
+            // update sequencer list
+            if (gfx.tx.type == TYPE_SEQUENCER){
+                this.seqs.push(gfx);
+            }
+
             return gfx;
         }
 
@@ -393,6 +421,31 @@
             this.socket.send(e);
         }
 
+        private removeNode(txg: TxG){
+            if (txg === undefined || this.hashTx[txg.tx.id] === undefined){
+                return;
+            }
+            delete(this.hashTx[txg.tx.id]);
+            this.mainArea.removeChild(txg);
+            // recursively remove all parents
+            for (let parent of txg.tx.parents){
+                console.log("parent", parent);
+                this.removeNode(this.hashTx[parent]);
+            }
+        }
+
+        private clearOldestSequencer() :boolean{
+            if (this.seqs.length <=2){
+                console.log("seq length", this.seqs.length);
+                return false;
+            }
+            let toRemoveSeq = this.seqs[0];
+            this.removeNode(toRemoveSeq);
+            this.seqs.splice(0,1);
+            this.scrollPane.setMinX(toRemoveSeq.x);
+            console.log("after length", this.seqs.length);
+            return true;
+        }
     }
 </script>
 <style>
