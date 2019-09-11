@@ -18,13 +18,13 @@ export class Tx {
         this.height = height;
     }
 
-    static parse(data: string):Tx|null{
+    static parse(data: string): Tx | null {
         let obj = JSON.parse(data);
-        switch(obj['type']){
+        switch (obj['type']) {
             case 0: // Tx
-                return new Tx(obj['hash'], obj['type'], obj['from'], obj['guarantee'], obj['parent_hash'], obj['weight'],0);
+                return new Tx(obj['hash'], obj['type'], obj['from'], obj['guarantee'], obj['parent_hash'], obj['weight'], 0);
             case 1: // Seq
-                return new Tx(obj['hash'], obj['type'], "sequencer", obj['treasure'], obj['parent_hash'], obj['weight'],obj['height']);
+                return new Tx(obj['hash'], obj['type'], "sequencer", obj['treasure'], obj['parent_hash'], obj['weight'], obj['height']);
         }
         return null;
     }
@@ -58,6 +58,7 @@ export function getSeqData(height: number): Tx[] {
     //         bet: 150,
     //         parents: ['0x1', '0x2'],
     //         weight: 2,
+    //         height: 0,
     //     },
     //     {
     //         id: '0x4',
@@ -66,6 +67,7 @@ export function getSeqData(height: number): Tx[] {
     //         bet: 200,
     //         parents: ['0x2', '0x3'],
     //         weight: 3,
+    //         height: 0,
     //     },
     // ];
 }

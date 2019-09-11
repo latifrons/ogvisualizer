@@ -11,6 +11,12 @@ import websockets
 
 teams = ['0xAA', '0xBB', '0xCC', '0xDD', '0xEE']
 rando = Random()
+bet = [rando.randint(0, 10) for x in range(30)] + \
+      [rando.randint(10, 100) for x in range(30)] + \
+      [rando.randint(100, 1000) for x in range(30)] + \
+      [rando.randint(1000, 10000) for x in range(30)] + \
+      [rando.randint(10000, 100000) for x in range(30)] + \
+      [rando.randint(100000, 1000000) for x in range(30)]
 
 
 async def hello(websocket, path):
@@ -39,7 +45,7 @@ async def hello(websocket, path):
                 'hash': str(rando.randint(0, 1000000)),
                 'parent_hash': parent_hash,
                 'nonce': 0,
-                'treasure': rando.randint(0, 200000),
+                'treasure': rando.choice(bet),
                 'value': 0,
                 'height': height,
                 'weight': max([txs[x]['weight'] for x in parent_hash]) + 1 if len(parent_hash) != 0 else 0,
@@ -54,7 +60,7 @@ async def hello(websocket, path):
                 'parent_hash': parent_hash,
                 'from': rando.choice(teams),
                 'to': rando.choice(teams),
-                'guarantee': rando.randint(0, 200000),
+                'guarantee': rando.choice(bet),
                 'nonce': 0,
                 # 'height': height,
                 'weight': max([txs[x]['weight'] for x in parent_hash]) + 1 if len(parent_hash) != 0 else 0,

@@ -16,7 +16,7 @@
     const TYPE_SEQUENCER = 1;
     const TYPE_TX = 0;
 
-    const MAX_NODES = 500;
+    const MAX_NODES = 200;
 
     class Team {
         public name: string;
@@ -98,7 +98,6 @@
         }
 
         repaint() {
-            console.log("repaint");
             this.gc.w = this.app.view.width;
             this.gc.h = this.app.view.height;
 
@@ -116,7 +115,10 @@
             // this.app.stage.addChild(this.gfx);
         }
 
-        repaintTx(gfx: TxG, repaintChildren: boolean= true, repaintParents: boolean = true, parentHighlighing = false) {
+        repaintTx(gfx: TxG, repaintChildren: boolean= true, repaintParents: boolean = true, parentHighlighing = false, parentHighlighingTxG?: TxG) {
+            if (!gfx){
+                return;
+            }
             gfx.clear();
 
             // locate other and connect them
@@ -128,7 +130,7 @@
                 }
                 if (gfx.highlighting){ // self highlighting
                     gfx.lineStyle(3, 0xec4e20, 1);
-                }else if (parentHighlighing) { // highlighted because of hovering on the parent
+                }else if (parentHighlighing && parentHighlighingTxG != null && parent == parentHighlighingTxG.tx.id) { // highlighted because of hovering on the parent
                     gfx.lineStyle(2, 0xe5d4ce, 0.7);
                 }else{
                     gfx.lineStyle(1, 0xfcffa6, 0.4);
@@ -144,8 +146,7 @@
 
             if (repaintChildren){
                 for (let child of gfx.txChildren){
-                    console.log("repaint children", gfx.tx);
-                    this.repaintTx(this.hashTx[child], false, false, gfx.highlighting);
+                    this.repaintTx(this.hashTx[child], false, false, gfx.highlighting, gfx);
                 }
             }
 
@@ -355,7 +356,7 @@
                 .on('mouseover', this.onMouseOver)
                 .on('mouseout', this.onMouseOut);
 
-            gfx.radius = Math.min(Math.log10(gfx.tx.bet) * this.gc.h / 100, 20);
+            gfx.radius = Math.max(Math.log10(gfx.tx.bet) * this.gc.h / 100, 15);
             gfx.x = Math.random() * 70 + tx.weight * 100;
 
             if (gfx.tx.type == TYPE_SEQUENCER){
@@ -399,7 +400,6 @@
         }
 
         welcomeNewTx(data: MessageEvent){
-            console.log(data.data);
             let tx = Tx.parse(data.data);
             console.log(tx);
             if (tx == null){
@@ -434,7 +434,6 @@
             this.mainArea.removeChild(txg);
             // recursively remove all parents
             for (let parent of txg.tx.parents){
-                console.log("parent", parent);
                 this.removeNode(this.hashTx[parent]);
             }
         }
