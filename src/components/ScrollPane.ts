@@ -27,8 +27,17 @@ export class ScrollPane extends PIXI.Container{
 
         this.setupScrollBar();
         this.addChild(this.scrollBar);
+        window.addEventListener("keypress", this.handler);
 
     }
+
+    handler = (e: KeyboardEvent) => {
+        console.log(e);
+        if (e.key === " "){
+            this.isFollowing = true;
+        }
+
+    };
 
     setMaxX(maxX: number){
         if (this.maxX != maxX){
@@ -143,7 +152,7 @@ export class ScrollPane extends PIXI.Container{
     }
 
     moveForward(deltaTime: number) {
-        if (!this.smoothForward || !this.isFollowing || this.scrollBarDragging){
+        if (!this.smoothForward || !this.isFollowing){
             return;
         }
         // this is the target
@@ -151,7 +160,7 @@ export class ScrollPane extends PIXI.Container{
         // here is the gap
         let gap = (this.maxX - this.widthDesign) - (-this.content.x);
         // console.log("gap", (this.maxX - this.widthDesign), this.content.x, gap);
-        if (Math.abs(gap) > 0.001){
+        if (gap > 0.001){
             this.viewX += deltaTime * (Math.max(1, gap / 20));
             this.updateViewX();
         }

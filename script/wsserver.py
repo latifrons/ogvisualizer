@@ -32,7 +32,7 @@ async def hello(websocket, path):
         else:
             parent_hash = []
         t = rando.random()
-        if t < 0.1:
+        if t < 0.05:
             parent_hash = tx_hashes
             tx = {
                 'type': 1,  # seq
@@ -63,7 +63,7 @@ async def hello(websocket, path):
         tx_hashes.append(tx['hash'])
         txs[tx['hash']] = tx
         await websocket.send(json.dumps(tx))
-        time.sleep(0.4)
+        time.sleep(0.1)
 
 
 if __name__ == '__main__':

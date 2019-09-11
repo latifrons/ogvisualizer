@@ -70,8 +70,9 @@
         hashTx: Record<string, TxG> = {};
         gc: GraphConfiguration;
         nameTeams: Record<string, Team> = {};
-        socket: WebSocket;
+        socket!: WebSocket;
         seqs: TxG[] = [];
+        wsURL = "ws://localhost:8765";
 
         infoAreaText: PIXI.Text = new PIXI.Text("", new PIXI.TextStyle({
             fontFamily: 'Arial',
@@ -93,7 +94,6 @@
 
         public constructor() {
             super();
-            this.socket = new WebSocket("ws://localhost:8765");
             this.gc = new GraphConfiguration(0, 0);
         }
 
@@ -410,16 +410,21 @@
         }
 
         wsconnect() {
+            console.log("connecting ws");
+            this.socket = new WebSocket(this.wsURL);
+
             this.socket.onopen = () => {
                 this.socket.onmessage = this.welcomeNewTx;
             };
+
+            this.socket.onclose = () =>{
+                setTimeout(this.wsconnect, 1000);
+            };
+            this.socket.onerror = (err) =>{
+                this.socket.close();
+            }
         }
-        disconnect() {
-            this.socket.close();
-        }
-        sendMessage(e: string) {
-            this.socket.send(e);
-        }
+
 
         private removeNode(txg: TxG){
             if (txg === undefined || this.hashTx[txg.tx.id] === undefined){
