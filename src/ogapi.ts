@@ -20,8 +20,7 @@ export class Tx {
         this.height = height;
     }
 
-    static parse(data: string): Tx | null {
-        let obj = JSON.parse(data);
+    static parse(obj: any): Tx | null {
         switch (obj['type']) {
             case 0: // Tx
                 return new Tx(obj['hash'], obj['type'], obj['from'], obj['guarantee'], obj['parent_hash'], obj['weight'], 0);
@@ -32,11 +31,20 @@ export class Tx {
     }
 }
 
-export function getSeqData(height: number): Tx[] {
-    axios.get('https://jsonplaceholder.typicode.com/todos/1').then(response => {
+type TxsCallback = (txs: Tx[]) => void;
+
+export function getSeqData(height: number, callback: TxsCallback): Tx[] {
+    axios.get('http://127.0.0.1:9900/height/' + height).then(response => {
         let data = response.data;
         console.log(data);
-        // callback(data);
+        let txs: Tx[] = [];
+        for (let txjson of data){
+            let tx = Tx.parse(txjson);
+            if (tx != null){
+                txs.push(tx)
+            }
+        }
+        callback(txs);
     });
 
     return []

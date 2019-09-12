@@ -87,13 +87,15 @@
             dropShadowAngle: Math.PI / 6,
             dropShadowDistance: 2,
             wordWrap: true,
-            wordWrapWidth: 440,
+            wordWrapWidth: 840,
         }));
         private currentHighlighting!: TxG;
 
         public constructor() {
             super();
             this.gc = new GraphConfiguration(0, 0);
+            window.addEventListener("keypress", this.handler);
+
         }
 
         repaint() {
@@ -187,8 +189,13 @@
             window.addEventListener("resize", () => this.onWindowResized());
 
             // add info area
-            this.infoAreaText.text = 'Hover to see the detailed info';
+            this.infoAreaText.text = 'Hover to see the detailed info. Press Enter to take a screenshot.';
 
+            let background = new Graphics();
+            background.beginFill(0);
+            background.drawRect(0,0,w,h);
+
+            this.app.stage.addChild(background);
             this.app.stage.addChild(this.infoAreaText);
 
             this.mainArea = new PIXI.Container();
@@ -220,7 +227,7 @@
             let team = this.judgeTeam(tx);
             let gfx = this.setupTxG(tx,team);
 
-            this.infoAreaText.text = Object.keys(this.hashTx).length.toString();
+            // this.infoAreaText.text = Object.keys(this.hashTx).length.toString();
             this.repaintTx(gfx);
             this.mainArea.addChild(gfx);
         }
@@ -289,7 +296,6 @@
         mounted() {
             this.init();
             this.reload();
-            this.repaint();
 
             if (this.$route.query["mode"] != "static"){
                 this.wsconnect();
@@ -308,7 +314,7 @@
             if (height ==  null){
                 return;
             }
-            this.txs = getSeqData(parseInt(height));
+            this.txs = getSeqData(parseInt(height), this.reloadCallback);
         }
 
         private onMouseOver(event: PIXI.interaction.InteractionEvent) {
@@ -404,7 +410,7 @@
         }
 
         welcomeNewTx(data: MessageEvent){
-            let tx = Tx.parse(data.data);
+            let tx = Tx.parse(JSON.parse(data.data));
             console.log(tx);
             if (tx == null){
                 return;
@@ -453,6 +459,27 @@
             this.scrollPane.setMinX(toRemoveSeq.x);
             console.log("after length", this.seqs.length);
             return true;
+        }
+
+        private reloadCallback(txs: Tx[]) {
+            this.txs = txs;
+            this.repaint();
+        }
+
+        handler(e: KeyboardEvent){
+            console.log(e);
+            if (e.key === "Enter"){
+                // save to local png
+                this.app.renderer.extract.canvas(this.app.stage).toBlob(function(b){
+                    var a = document.createElement('a');
+                    document.body.append(a);
+                    a.download = "hackathon.png";
+                    a.href = URL.createObjectURL(b);
+                    a.click();
+                    a.remove();
+                }, 'image/png');
+            }
+
         }
     }
 </script>
