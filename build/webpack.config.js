@@ -10,7 +10,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, './'),
     publicPath: './',
-    filename: 'chunk.[hash].js',
+    filename: 'chunk.js',
     devtoolModuleFilenameTemplate: info => {
       // console.log(info.resourcePath);
       var $filename = 'sources://' + info.resourcePath;
