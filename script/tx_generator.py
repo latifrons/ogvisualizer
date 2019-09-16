@@ -36,10 +36,10 @@ def iter_tx(start_height=1, start_with_seq=False, end_with_seq=False):
             tx = {
                 'type': 1,  # seq
                 'hash': str(rando.randint(0, 1000000)),
-                'parent_hash': parent_hash,
+                'parents': parent_hash,
+                'from': "seq",
                 'nonce': 0,
                 'treasure': rando.choice(bet),
-                'value': 0,
                 'height': height,
                 'weight': max([txs[x]['weight'] for x in parent_hash]) + 1 if len(parent_hash) != 0 else 0,
             }
@@ -50,11 +50,12 @@ def iter_tx(start_height=1, start_with_seq=False, end_with_seq=False):
             tx = {
                 'type': 0,  # tx
                 'hash': str(rando.randint(0, 1000000)),
-                'parent_hash': parent_hash,
+                'parents': parent_hash,
                 'from': rando.choice(teams),
                 'to': rando.choice(teams),
                 'guarantee': rando.choice(bet),
                 'nonce': 0,
+                'value': 0,
                 # 'height': height,
                 'weight': max([txs[x]['weight'] for x in parent_hash]) + 1 if len(parent_hash) != 0 else 0,
             }

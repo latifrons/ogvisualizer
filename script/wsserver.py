@@ -13,7 +13,7 @@ from tx_generator import iter_tx
 async def hello(websocket, path):
     for tx in iter_tx():
         await websocket.send(json.dumps(tx))
-        time.sleep(0.1)
+        time.sleep(0.3)
 
 
 if __name__ == '__main__':

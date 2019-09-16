@@ -23,9 +23,9 @@ export class Tx {
     static parse(obj: any): Tx | null {
         switch (obj['type']) {
             case 0: // Tx
-                return new Tx(obj['hash'], obj['type'], obj['from'], obj['guarantee'], obj['parent_hash'], obj['weight'], 0);
+                return new Tx(obj['hash'], obj['type'], obj['from'], obj['guarantee'], obj['parents'], obj['weight'], 0);
             case 1: // Seq
-                return new Tx(obj['hash'], obj['type'], "sequencer", obj['treasure'], obj['parent_hash'], obj['weight'], obj['height']);
+                return new Tx(obj['hash'], obj['type'], "sequencer", obj['treasure'], obj['parents'], obj['weight'], obj['height']);
         }
         return null;
     }
@@ -33,8 +33,8 @@ export class Tx {
 
 type TxsCallback = (txs: Tx[]) => void;
 
-export function getSeqData(height: number, callback: TxsCallback): Tx[] {
-    axios.get('http://127.0.0.1:9900/height/' + height).then(response => {
+export function getSeqData(ogHeight: number, callback: TxsCallback): Tx[] {
+    axios.get('http://127.0.0.1:9900/height/' + ogHeight).then(response => {
         let data = response.data;
         console.log(data);
         let txs: Tx[] = [];

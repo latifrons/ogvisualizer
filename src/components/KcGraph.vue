@@ -99,9 +99,6 @@
         }
 
         repaint() {
-            this.gc.w = this.app.view.width;
-            this.gc.h = this.app.view.height;
-
             // draw background
 
             // while (this.app.stage.children.length > 0) {
@@ -205,6 +202,10 @@
             this.scrollPane.setMaxX(w);
 
             this.app.stage.addChild(this.scrollPane);
+
+            this.gc.w = this.app.view.width;
+            this.gc.h = this.app.view.height;
+
             // this.app.stage.interactive = true;
             // this.app.renderer.plugins.interaction.moveWhenInside = true;
             this.app.ticker.add((deltaTime => {
@@ -310,11 +311,11 @@
         }
 
         private reload() {
-            let height = this.$route.query["height"] as string;
-            if (height ==  null){
+            let ogHeight = this.$route.query["height"] as string;
+            if (ogHeight ==  null){
                 return;
             }
-            this.txs = getSeqData(parseInt(height), this.reloadCallback);
+            this.txs = getSeqData(parseInt(ogHeight), this.reloadCallback);
         }
 
         private onMouseOver(event: PIXI.interaction.InteractionEvent) {
