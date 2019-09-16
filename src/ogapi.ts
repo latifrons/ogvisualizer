@@ -34,7 +34,12 @@ export class Tx {
 type TxsCallback = (txs: Tx[]) => void;
 
 export function getSeqData(ogHeight: number, callback: TxsCallback): Tx[] {
-    axios.get('http://127.0.0.1:9900/height/' + ogHeight).then(response => {
+    let host = "http://47.100.122.212:30020";
+    if (!host){
+        console.warn("URL_API not found");
+        return [];
+    }
+    axios.get(host + '/height/' +  ogHeight).then(response => {
         let data = response.data;
         console.log(data);
         let txs: Tx[] = [];

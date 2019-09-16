@@ -57,6 +57,11 @@
 
     @Component
     export default class KcGraph extends Vue {
+        // wsURL = "ws://localhost:8765";
+        // wsURL = "ws://47.100.122.212:30020/ws";
+
+        // @Prop()
+        wsURL: string = "ws://47.100.122.212:30020/ws";
 
         txs: Tx[] = [];
 
@@ -71,7 +76,7 @@
         nameTeams: Record<string, Team> = {};
         socket!: WebSocket;
         seqs: TxG[] = [];
-        wsURL = "ws://localhost:8765";
+
 
         infoAreaText: PIXI.Text = new PIXI.Text("", new PIXI.TextStyle({
             fontFamily: 'Arial',
@@ -297,6 +302,7 @@
         mounted() {
             this.init();
             this.reload();
+            console.log(this.wsURL);
 
             if (this.$route.query["mode"] != "static"){
                 this.wsconnect();
@@ -367,6 +373,22 @@
                 .on('mouseover', this.onMouseOver)
                 .on('mouseout', this.onMouseOut);
 
+            this.hashTx[tx.id] = gfx;
+            // builc children relationship
+            // update weight if missing
+            let supposeWeight = 0;
+            for (let parent of gfx.tx.parents){
+                let parentTxg = this.hashTx[parent];
+                if (parentTxg){
+                    this.hashTx[parent].txChildren.push(tx.id);
+                    supposeWeight = Math.max(supposeWeight, parentTxg.tx.weight + 1);
+                }
+            }
+
+            if (!gfx.tx.weight){
+                gfx.tx.weight = supposeWeight;
+            }
+
             gfx.radius = Math.max(Math.log10(gfx.tx.bet) * this.gc.h / 100, 15);
             gfx.x = Math.random() * 70 + tx.weight * 100;
 
@@ -376,14 +398,6 @@
                 gfx.y = gfx.radius + Math.random() * (this.gc.h - gfx.radius * 2);
             }
 
-            this.hashTx[tx.id] = gfx;
-            // builc children relationship
-            for (let parent of gfx.tx.parents){
-                let parentTxg = this.hashTx[parent];
-                if (parentTxg){
-                    this.hashTx[parent].txChildren.push(tx.id);
-                }
-            }
             // update viewport
             this.scrollPane.setMaxX(Math.max(this.scrollPane.maxX, gfx.x + gfx.radius));
             // update sequencer list
@@ -411,6 +425,7 @@
         }
 
         welcomeNewTx(data: MessageEvent){
+            console.log(data.data);
             let tx = Tx.parse(JSON.parse(data.data));
             console.log(tx);
             if (tx == null){
