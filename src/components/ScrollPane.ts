@@ -1,4 +1,4 @@
-const barHeight = 20;
+const barHeight = 15;
 
 export class ScrollPane extends PIXI.Container{
     content: PIXI.DisplayObject;
