@@ -24,12 +24,12 @@
             if (this.$route.query["w"]){
                 w = parseInt(this.$route.query["w"] as string);
             }else{
-                w = 1536;
+                w = 1340;
             }
             if (this.$route.query["h"]){
                 h = parseInt(this.$route.query["h"] as string);
             }else{
-                h = 800;
+                h = 640;
             }
 
             return `height: ${h}px; width: ${w}px;`;
