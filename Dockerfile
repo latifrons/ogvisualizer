@@ -6,7 +6,7 @@ COPY . /app/
 RUN npm install \
 && npm run build
 
-FROM nginx
+FROM nginx:stable-alpine
 COPY --from=builder /app/build/* /usr/share/nginx/html/
 EXPOSE 80
 RUN echo "Asia/shanghai" > /etc/timezone

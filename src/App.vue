@@ -2,7 +2,7 @@
     <div id="app" style="margin-left: 10px; margin-top: 10px">
         <!--        <kc-graph @xx="setX" id="toplayer" style="width: 300px; height: 200px;" :myx="this.x+30" :interactive="true"></kc-graph>-->
         <!--        <div style="height: 20px"></div>-->
-        <kc-graph style="width: 1536px; height: 600px;"></kc-graph>
+        <kc-graph ref="graph" v-bind:style="wh"></kc-graph>
 <!--        <scrollpanetest style="width: 1500px; height: 400px"></scrollpanetest>-->
     </div>
 </template>
@@ -17,6 +17,30 @@
 
     @Component
     export default class App extends Vue{
+
+
+        get wh(): string{
+            let w, h : number;
+            if (this.$route.query["w"]){
+                w = parseInt(this.$route.query["w"] as string);
+            }else{
+                w = 1536;
+            }
+            if (this.$route.query["h"]){
+                h = parseInt(this.$route.query["h"] as string);
+            }else{
+                h = 800;
+            }
+
+            return `height: ${h}px; width: ${w}px;`;
+
+
+        }
+        // mounted(){
+        //     console.log();
+        //     let elem: HTMLElement= this.$refs["graph"] as HTMLElement;
+        //     elem.setAttribute("style", "height: 300px; width: " + this.getW()+ "px")
+        // }
     }
 </script>
 

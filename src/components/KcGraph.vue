@@ -76,6 +76,7 @@
         nameTeams: Record<string, Team> = {};
         socket!: WebSocket;
         seqs: TxG[] = [];
+        startWeight: number = -1;
 
 
         infoAreaText: PIXI.Text = new PIXI.Text("", new PIXI.TextStyle({
@@ -388,9 +389,12 @@
             if (!gfx.tx.weight){
                 gfx.tx.weight = supposeWeight;
             }
+            if (this.startWeight == -1){
+                this.startWeight = gfx.tx.weight;
+            }
 
             gfx.radius = Math.max(Math.log10(gfx.tx.bet) * this.gc.h / 100, 15);
-            gfx.x = Math.random() * 70 + tx.weight * 100;
+            gfx.x = Math.random() * 70 + (tx.weight-this.startWeight) * 100;
 
             if (gfx.tx.type == TYPE_SEQUENCER){
                 gfx.y = this.gc.h / 2;
