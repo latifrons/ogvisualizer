@@ -1,10 +1,11 @@
 FROM node:10 as builder
 RUN mkdir /app
 WORKDIR /app
-COPY . /app/
+COPY package* /app/
+RUN npm install
 
-RUN npm install \
-&& npm run build
+COPY . /app/
+RUN npm run build
 
 FROM nginx:stable-alpine
 COPY --from=builder /app/build/* /usr/share/nginx/html/
