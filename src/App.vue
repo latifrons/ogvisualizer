@@ -1,5 +1,5 @@
 <template>
-    <div id="app" style="margin-left: 10px; margin-top: 10px">
+    <div id="app">
         <!--        <kc-graph @xx="setX" id="toplayer" style="width: 300px; height: 200px;" :myx="this.x+30" :interactive="true"></kc-graph>-->
         <!--        <div style="height: 20px"></div>-->
         <kc-graph ref="graph" v-bind:style="wh"></kc-graph>

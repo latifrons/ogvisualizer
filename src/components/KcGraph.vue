@@ -80,16 +80,16 @@
 
 
         infoAreaText: PIXI.Text = new PIXI.Text("", new PIXI.TextStyle({
-            fontFamily: 'Arial',
+            fontFamily: 'SF Pro SC,SF Pro Text,SF Pro Icons,PingFang SC,Helvetica Neue,Helvetica,Hiragino Sans GB,Century Gothic,system,Verdana,Tahoma,Arial,sans-serif',
             fontSize: 20,
             // fontStyle: 'italic',
-            fontWeight: 'bold',
-            fill: ['#ffffff', '#00ff99'], // gradient
+            // fontWeight: 'bold',
+            fill: '#ffffff',
             stroke: '#4a1850',
             strokeThickness: 5,
             dropShadow: true,
             dropShadowColor: '#000000',
-            dropShadowBlur: 4,
+            dropShadowBlur: 2,
             dropShadowAngle: Math.PI / 6,
             dropShadowDistance: 2,
             wordWrap: true,
@@ -176,7 +176,7 @@
 
             let pixiOptions: PIXI.ApplicationOptions = {
                 transparent: false,
-                backgroundColor: 0x0,
+                backgroundColor: 0x1D253E,
                 width: w,
                 height: h,
                 antialias: true,
@@ -195,7 +195,7 @@
             this.infoAreaText.text = 'Hover to see the detailed info. Press Enter to take a screenshot.';
 
             let background = new Graphics();
-            background.beginFill(0);
+            background.beginFill(0x1D253E);
             background.drawRect(0,0,w,h);
 
             this.app.stage.addChild(background);
@@ -352,6 +352,7 @@
                 this.currentHighlighting.highlighting = false;
                 this.repaintTx(this.currentHighlighting);
             }
+            this.infoAreaText.text = "";
         }
 
 
@@ -418,7 +419,7 @@
             if (team === undefined) {
                 // randomly pick a color for this team.
                 let s  = randomcolor({
-                    luminosity: 'light',
+                    luminosity: 'bright',
                     format: 'hex',
                 });
                 let color = parseInt(s.substr(1,6),16);
