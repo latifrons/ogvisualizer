@@ -342,7 +342,7 @@
                     this.infoAreaText.text = `Sequencer ${ct.tx.height} : ${ct.tx.bet}`;
                     break;
                 case TYPE_TX:
-                    this.infoAreaText.text = `Sender: ${ct.tx.owner.substr(0,10)}... TxHash: ${ct.tx.id} Guarantee: ${ct.tx.bet}`;
+                    this.infoAreaText.text = `Sender: ${ct.tx.owner.substr(0,10)}... TxHash: ${ct.tx.id.substr(0,10)} Guarantee: ${ct.tx.bet}`;
                     break;
             }
 
