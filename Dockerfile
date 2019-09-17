@@ -1,19 +1,14 @@
-FROM node:10
+FROM node:10 as builder
+RUN mkdir /app
+WORKDIR /app
+COPY . /app/
 
-# Create app directory
-WORKDIR /usr/src/app
+RUN npm install \
+&& npm run build
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package*.json ./
+FROM nginx
+COPY --from=builder /app/build/* /usr/share/nginx/html/
+EXPOSE 80
+RUN echo "Asia/shanghai" > /etc/timezone
+CMD ["nginx","-g","daemon off;"]
 
-RUN npm install
-# If you are building your code for production
-RUN npm ci --only=production
-
-# Bundle app source
-COPY . .
-
-EXPOSE 8080
-CMD [ "node", "./build/server.js" ]

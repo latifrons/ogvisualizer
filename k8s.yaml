@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ogvisualizer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ogvisualizer
+    spec:
+      containers:
+        - name: ogvisualizer
+          image: 172.28.152.101:5000/ogvisualizer:latest
+          ports:
+            - name: http
+              containerPort: 80
+  -------
+apiVersion: v1
+kind: Service
+metadata:
+  name: ogvisualizer
+spec:
+  selector:
+    app: ogvisualizer
+  type: NodePort
+  ports:
+    - name: query
+      port: 80
+      nodePort: 30021
