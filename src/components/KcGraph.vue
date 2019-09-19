@@ -418,11 +418,16 @@
 
             if (team === undefined) {
                 // randomly pick a color for this team.
-                let s  = randomcolor({
-                    luminosity: 'bright',
-                    format: 'hex',
-                });
-                let color = parseInt(s.substr(1,6),16);
+                let color: number;
+                if (tx.type == 1){
+                    let s  = randomcolor({
+                        luminosity: 'bright',
+                        format: 'hex',
+                    });
+                    color = parseInt(s.substr(1,6),16);
+                }else{
+                    color = parseInt(tx.owner.substr(2,6),16);
+                }
                 this.nameTeams[tx.owner] = new Team(tx.owner, color);
             }
             team = this.nameTeams[tx.owner];
