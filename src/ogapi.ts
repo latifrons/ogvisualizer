@@ -33,14 +33,15 @@ export class Tx {
 
 type TxsCallback = (txs: Tx[]) => void;
 
-export function getSeqData(ogHeight: number, callback: TxsCallback): Tx[] {
+export function getSeqData(ogHeight: number,token: string, callback: TxsCallback): Tx[] {
     let host = "http://47.100.122.212:30020";
     if (!host){
         console.warn("URL_API not found");
         return [];
     }
-    axios.get(host + '/height/' +  ogHeight).then(response => {
-        let data = response.data;
+
+    axios.get(host + '/transactions?height=' + ogHeight + '&token=' + token).then(response => {
+        let data = response.data.data;
         console.log(data);
         let txs: Tx[] = [];
         for (let txjson of data){

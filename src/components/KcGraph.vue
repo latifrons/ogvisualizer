@@ -322,7 +322,11 @@
             if (ogHeight ==  null){
                 return;
             }
-            this.txs = getSeqData(parseInt(ogHeight), this.reloadCallback);
+            let token = this.$route.query["token"] as string;
+            if (token ==  null){
+                return;
+            }
+            this.txs = getSeqData(parseInt(ogHeight), token, this.reloadCallback);
         }
 
         private onMouseOver(event: PIXI.interaction.InteractionEvent) {
