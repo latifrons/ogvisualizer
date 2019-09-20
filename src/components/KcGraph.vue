@@ -185,8 +185,8 @@
             this.canvasElement.appendChild(this.app.view);
 
             //fix scrolling when touching the canvas on mobile
-            this.app.renderer.plugins["interaction"].autoPreventDefault = false;
-            this.app.renderer.view.style.setProperty("touch-action", "auto");
+            // this.app.renderer.plugins["interaction"].autoPreventDefault = true;
+            // this.app.renderer.view.style.setProperty("touch-action", "auto");
 
             //register the window resize event to resize the pixi renderer
             window.addEventListener("resize", () => this.onWindowResized());
@@ -282,12 +282,12 @@
             // context.y = newPosition.y;
             // }
             let currentTarget: TxG = event.currentTarget as TxG;
-            let data = event.data;
-            let type = event.type;
-
-            let p = event.data.getLocalPosition(event.currentTarget.parent);
 
             if (currentTarget.dragging) {
+                let data = event.data;
+                let type = event.type;
+
+                let p = event.data.getLocalPosition(event.currentTarget.parent);
                 currentTarget.x = p.x;
                 currentTarget.y = p.y;
                 this.repaintTx(currentTarget);
@@ -366,16 +366,15 @@
             gfx.buttonMode = true;
             gfx
             // events for drag start
-                .on('mousedown', this.onDragStart)
-                .on('touchstart', this.onDragStart)
+                .on('pointerdown', this.onDragStart)
+                .on('touchstart', this.onMouseOver)
                 // events for drag end
-                .on('mouseup', this.onDragEnd)
-                .on('mouseupoutside', this.onDragEnd)
-                .on('touchend', this.onDragEnd)
-                .on('touchendoutside', this.onDragEnd)
+                .on('pointerup', this.onDragEnd)
+                .on('pointerupoutside', this.onDragEnd)
+                // .on('touchendoutside', this.onDragEnd)
                 // events for drag move
-                .on('mousemove', this.onDragMove)
-                .on('touchmove', this.onDragMove)
+                .on('pointermove', this.onDragMove)
+                // .on('touchmove', this.onDragMove)
                 .on('mouseover', this.onMouseOver)
                 .on('mouseout', this.onMouseOut);
 
