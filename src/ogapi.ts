@@ -8,9 +8,10 @@ export class Tx {
     public parents: string[];
     public weight: number = 0;
     public height: number = 0;
+    public nonce: number = 0;
 
     constructor(id: string, type: number, owner: string, bet: number, parents: string[],
-                weight: number, height: number) {
+                weight: number, height: number, nonce: number) {
         this.id = id;
         this.type = type;
         this.owner = owner;
@@ -18,14 +19,15 @@ export class Tx {
         this.parents = parents;
         this.weight = weight;
         this.height = height;
+        this.nonce = nonce;
     }
 
     static parse(obj: any): Tx | null {
         switch (obj['type']) {
             case 0: // Tx
-                return new Tx(obj['hash'], obj['type'], obj['from'], obj['guarantee'], obj['parents'], obj['weight'], 0);
+                return new Tx(obj['hash'], obj['type'], obj['from'], obj['guarantee'], obj['parents'], obj['weight'], 0, obj['nonce']);
             case 1: // Seq
-                return new Tx(obj['hash'], obj['type'], "sequencer", obj['treasure'], obj['parents'], obj['weight'], obj['height']);
+                return new Tx(obj['hash'], obj['type'], "sequencer", obj['treasure'], obj['parents'], obj['weight'], obj['height'], 0);
         }
         return null;
     }
